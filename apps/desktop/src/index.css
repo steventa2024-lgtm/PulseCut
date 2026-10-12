@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* PulseCut "Pro Studio Dark" design tokens. See docs/DESIGN_SYSTEM.md. */
+@theme {
+  --color-pc-bg: #0e0f11;
+  --color-pc-panel: #15171a;
+  --color-pc-panel-2: #1b1e22;
+  --color-pc-raised: #23272c;
+  --color-pc-border: #2a2e34;
+  --color-pc-border-strong: #3a3f47;
+  --color-pc-text: #e6e8eb;
+  --color-pc-muted: #9aa3ad;
+  --color-pc-faint: #6b737d;
+  --color-pc-accent: #2f8cff;
+  --color-pc-accent-hi: #5aa8ff;
+  --color-pc-accent-lo: #1d4f8f;
+  --color-pc-danger: #ff5c5c;
+  --color-pc-warn: #f2b84b;
+  --color-pc-ok: #3ecf8e;
+  --color-pc-clip-video: #2b4a72;
+  --color-pc-clip-video-hi: #3a6aa6;
+  --color-pc-clip-audio: #1e5a4d;
+  --color-pc-clip-audio-hi: #2b8c75;
+  --radius-pc: 3px;
+  --font-sans: "Inter", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Ubuntu", "Cantarell", sans-serif;
+  --font-mono: "Cascadia Mono", "JetBrains Mono", "Consolas", ui-monospace, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--color-pc-bg);
+  color: var(--color-pc-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pc-accent);
+  outline-offset: 1px;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-pc-panel);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-pc-border-strong);
+  border: 2px solid var(--color-pc-panel);
+  border-radius: 6px;
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
