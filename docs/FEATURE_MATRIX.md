@@ -3,6 +3,8 @@
 Status values: **Not started · Prototype · Implemented · Tested · Released**.
 "Tested" means covered by an automated test in this repo *and* exercised manually in the app. Nothing is **Released** yet (no public binary). Difficulty: S / M / L / XL.
 
+> As of v0.1.0, "Tested" rows pass their automated tests on Linux. The manual GUI pass (import → edit → playback → save/reopen → export from the UI) on the Linux development build is still in progress, and nothing has been run on Windows.
+
 Comparisons with other editors refer to publicly documented, user-visible workflows only; no claim of parity is made for anything not listed as Tested.
 
 ## A. Editorial / timeline
