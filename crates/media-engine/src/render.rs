@@ -433,6 +433,7 @@ impl PlaybackStream {
     /// receives `(timeline frame index, jpeg bytes)` and runs on a worker thread.
     /// Frames are released no earlier than `lead` before their presentation time,
     /// bounding memory to roughly `lead * fps` frames downstream.
+    #[allow(clippy::too_many_arguments)]
     pub fn start(
         tools: &FfmpegTools,
         project: &Project,

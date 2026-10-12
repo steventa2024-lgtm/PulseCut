@@ -78,8 +78,10 @@ pub fn waveform(tools: &FfmpegTools, path: &Path) -> Result<Vec<f32>, MediaError
     let bucket = (WAVEFORM_RATE / WAVEFORM_PEAKS_PER_SECOND) as usize;
     Ok(out
         .stdout
-        .chunks_exact(2)
-        .map(|b| i16::from_le_bytes([b[0], b[1]]).unsigned_abs())
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|b| i16::from_le_bytes(*b).unsigned_abs())
         .collect::<Vec<u16>>()
         .chunks(bucket)
         .map(|c| *c.iter().max().unwrap_or(&0) as f32 / 32768.0)

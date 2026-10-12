@@ -175,7 +175,7 @@ fn sort_track(t: &mut Track) {
 }
 
 fn advance_source(source_in: Rational, frames: i64, fps: Rational) -> Rational {
-    source_in.add(frames_to_seconds(frames, fps))
+    source_in + frames_to_seconds(frames, fps)
 }
 
 /// Overwrite: remove/trim/split whatever lies in `[s, e)` on track `ti`, except `exclude`.
@@ -535,7 +535,7 @@ fn trim_clip(
             TrimEdge::Start => {
                 c.start += delta;
                 c.duration -= delta;
-                let shifted = c.source_in.add(frames_to_seconds(delta, fps));
+                let shifted = c.source_in + frames_to_seconds(delta, fps);
                 c.source_in = shifted.max(Rational::ZERO);
             }
             TrimEdge::End => c.duration += delta,

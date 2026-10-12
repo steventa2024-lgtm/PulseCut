@@ -16,8 +16,8 @@ pub fn validate_project(p: &Project) -> Result<(), String> {
     }
     if !(16..=8192).contains(&seq.width)
         || !(16..=8192).contains(&seq.height)
-        || seq.width % 2 != 0
-        || seq.height % 2 != 0
+        || !seq.width.is_multiple_of(2)
+        || !seq.height.is_multiple_of(2)
     {
         return Err(format!(
             "unsupported sequence size {}x{} (even values 16–8192 required)",

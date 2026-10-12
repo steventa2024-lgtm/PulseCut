@@ -111,7 +111,7 @@ pub fn compile(project: &Project, req: &RenderRequest) -> Result<RenderPlan, Str
                 let Some(vinfo) = &asset.media.video else {
                     continue;
                 };
-                let seek = clip.source_in.add(frames_to_seconds(vs - clip.start, fps));
+                let seek = clip.source_in + frames_to_seconds(vs - clip.start, fps);
                 let len = frames_to_seconds(ve - vs, fps);
                 let offset = frames_to_seconds(vs - req.start_frame, fps);
                 // Decode from up to PREROLL before the in-point and let `fps` pick frames on
@@ -143,9 +143,9 @@ pub fn compile(project: &Project, req: &RenderRequest) -> Result<RenderPlan, Str
                         &mut args,
                         vec![
                             "-ss".into(),
-                            secs(seek.sub(pre)),
+                            secs(seek - pre),
                             "-t".into(),
-                            secs(len.add(pre)),
+                            secs(len + pre),
                             "-i".into(),
                             asset.path.clone(),
                         ],
@@ -164,7 +164,7 @@ pub fn compile(project: &Project, req: &RenderRequest) -> Result<RenderPlan, Str
                 let y = ((h as f64 - th as f64) / 2.0 + clip.params.position_y * k).round() as i64;
                 let off = offset.as_f64();
                 let end = off + len.as_f64();
-                let shift = offset.sub(pre).as_f64();
+                let shift = (offset - pre).as_f64();
                 let q = 0.25 / fps.as_f64();
                 let (t_start, t_end) = (off - q, end - q);
                 let _ = write!(
@@ -230,7 +230,7 @@ pub fn compile(project: &Project, req: &RenderRequest) -> Result<RenderPlan, Str
                 if asset.media.audio.is_none() {
                     continue;
                 }
-                let seek = clip.source_in.add(frames_to_seconds(vs - clip.start, fps));
+                let seek = clip.source_in + frames_to_seconds(vs - clip.start, fps);
                 let len = frames_to_seconds(ve - vs, fps);
                 let offset = frames_to_seconds(vs - req.start_frame, fps);
                 let delay_samples = (offset.as_f64() * sr as f64).round() as i64;

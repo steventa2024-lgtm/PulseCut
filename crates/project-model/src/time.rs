@@ -130,14 +130,6 @@ impl Rational {
         )
     }
 
-    pub fn add(self, o: Rational) -> Rational {
-        self.checked_add(o).expect("rational overflow")
-    }
-
-    pub fn sub(self, o: Rational) -> Rational {
-        self.checked_sub(o).expect("rational overflow")
-    }
-
     /// Parses FFmpeg-style `"30000/1001"` or plain integers/decimals like `"29.97"`.
     pub fn parse(s: &str) -> Option<Rational> {
         let s = s.trim();
@@ -214,6 +206,20 @@ pub fn format_timecode(frame: i64, fps: Rational) -> String {
         total_s % 60,
         ff
     )
+}
+
+impl std::ops::Add for Rational {
+    type Output = Rational;
+    fn add(self, o: Rational) -> Rational {
+        self.checked_add(o).expect("rational overflow")
+    }
+}
+
+impl std::ops::Sub for Rational {
+    type Output = Rational;
+    fn sub(self, o: Rational) -> Rational {
+        self.checked_sub(o).expect("rational overflow")
+    }
 }
 
 #[cfg(test)]
