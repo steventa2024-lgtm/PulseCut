@@ -8,6 +8,7 @@ import { formatDuration, formatFps, framesToSeconds } from "../lib/time";
 import type { ExportEvent, ExportQuality, VerifyCheck } from "../lib/types";
 import logo from "../logo.svg";
 import { Button, Modal } from "./ui";
+import { withExtension } from "../lib/paths";
 
 const PRESETS = [
   { label: "HD 1080p · 1920×1080", w: 1920, h: 1080 },
@@ -125,7 +126,7 @@ export function ExportDialog() {
 
   const choose = async () => {
     const picked = await save({ title: "Export video", defaultPath: path || `${ps.project.name}.mp4`, filters: [{ name: "MPEG-4 video", extensions: ["mp4"] }, { name: "QuickTime", extensions: ["mov"] }] });
-    if (picked) setPath(/\.(mp4|mov)$/i.test(picked) ? picked : `${picked}.mp4`);
+    if (picked) setPath(withExtension(picked, ["mp4", "mov"]));
   };
 
   const start = async () => {

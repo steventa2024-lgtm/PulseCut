@@ -5,3 +5,4 @@ apps/desktop/src-tauri/gen/schemas/
 *.log
 /tmp/
 .DS_Store
+*.tsbuildinfo

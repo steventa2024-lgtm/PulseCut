@@ -22,16 +22,18 @@ export function Splitter({
       tabIndex={0}
       className={`group relative z-10 shrink-0 bg-pc-border focus-visible:bg-pc-accent ${vertical ? "w-px cursor-col-resize" : "h-px cursor-row-resize"}`}
       onPointerDown={(e) => {
-        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+        if (e.button !== 0) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
         last.current = vertical ? e.clientX : e.clientY;
+        e.preventDefault();
       }}
       onPointerMove={(e) => {
-        if (!(e.target as HTMLElement).hasPointerCapture(e.pointerId)) return;
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
         const pos = vertical ? e.clientX : e.clientY;
-        onDelta(pos - last.current);
+        if (pos !== last.current) onDelta(pos - last.current);
         last.current = pos;
       }}
-      onPointerUp={() => onDone?.()}
+      onLostPointerCapture={() => onDone?.()}
       onKeyDown={(e) => {
         const step = e.shiftKey ? 64 : 16;
         const keys: Record<string, number> = vertical ? { ArrowLeft: -step, ArrowRight: step } : { ArrowUp: -step, ArrowDown: step };
@@ -44,7 +46,7 @@ export function Splitter({
         }
       }}
     >
-      <div className={`absolute ${vertical ? "inset-y-0 -left-[3px] w-[7px]" : "inset-x-0 -top-[3px] h-[7px]"} group-hover:bg-pc-accent/40`} />
+      <div className={`absolute ${vertical ? "inset-y-0 -left-[4px] w-[9px]" : "inset-x-0 -top-[4px] h-[9px]"} group-hover:bg-pc-accent/40`} />
     </div>
   );
 }

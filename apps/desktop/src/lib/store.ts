@@ -3,6 +3,7 @@ import { open, save, ask } from "@tauri-apps/plugin-dialog";
 import { errorMessage, ipc } from "./ipc";
 import type { EditCommand, EngineStatus, ProjectState, Uuid } from "./types";
 import { playback } from "./playback";
+import { withExtension } from "./paths";
 
 export type Dialog = null | "new" | "export" | "shortcuts" | "about" | "status";
 
@@ -217,7 +218,7 @@ export const useStore = create<Store>((set, get) => ({
         filters: [{ name: "PulseCut project", extensions: ["pulsecut"] }],
       });
       if (!picked) return false;
-      path = picked.toLowerCase().endsWith(".pulsecut") ? picked : `${picked}.pulsecut`;
+      path = withExtension(picked, ["pulsecut"]);
     }
     try {
       get().setState(await ipc.saveProject(path));
