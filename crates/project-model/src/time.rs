@@ -25,13 +25,17 @@ struct RationalRepr {
 impl TryFrom<RationalRepr> for Rational {
     type Error = String;
     fn try_from(r: RationalRepr) -> Result<Self, Self::Error> {
-        Rational::try_new(r.num, r.den).ok_or_else(|| format!("invalid rational {}/{}", r.num, r.den))
+        Rational::try_new(r.num, r.den)
+            .ok_or_else(|| format!("invalid rational {}/{}", r.num, r.den))
     }
 }
 
 impl From<Rational> for RationalRepr {
     fn from(r: Rational) -> Self {
-        RationalRepr { num: r.num, den: r.den }
+        RationalRepr {
+            num: r.num,
+            den: r.den,
+        }
     }
 }
 
@@ -48,6 +52,7 @@ fn gcd(mut a: i128, mut b: i128) -> i128 {
 
 impl Rational {
     pub const ZERO: Rational = Rational { num: 0, den: 1 };
+    pub const HALF: Rational = Rational { num: 1, den: 2 };
 
     pub fn try_new(num: i64, den: i64) -> Option<Self> {
         if den == 0 {
@@ -71,7 +76,10 @@ impl Rational {
             n = -n;
             d = -d;
         }
-        Some(Rational { num: i64::try_from(n).ok()?, den: i64::try_from(d).ok()? })
+        Some(Rational {
+            num: i64::try_from(n).ok()?,
+            den: i64::try_from(d).ok()?,
+        })
     }
 
     pub fn from_int(v: i64) -> Self {
@@ -102,15 +110,24 @@ impl Rational {
     }
 
     pub fn checked_sub(self, o: Rational) -> Option<Rational> {
-        self.checked_add(Rational { num: -o.num, den: o.den })
+        self.checked_add(Rational {
+            num: -o.num,
+            den: o.den,
+        })
     }
 
     pub fn checked_mul(self, o: Rational) -> Option<Rational> {
-        Self::from_i128(self.num as i128 * o.num as i128, self.den as i128 * o.den as i128)
+        Self::from_i128(
+            self.num as i128 * o.num as i128,
+            self.den as i128 * o.den as i128,
+        )
     }
 
     pub fn checked_div(self, o: Rational) -> Option<Rational> {
-        Self::from_i128(self.num as i128 * o.den as i128, self.den as i128 * o.num as i128)
+        Self::from_i128(
+            self.num as i128 * o.den as i128,
+            self.den as i128 * o.num as i128,
+        )
     }
 
     pub fn add(self, o: Rational) -> Rational {
@@ -131,8 +148,16 @@ impl Rational {
             let digits = frac.len().min(9) as u32;
             let frac = &frac[..digits as usize];
             let den = 10i64.pow(digits);
-            let int_v: i64 = if int.is_empty() || int == "-" { 0 } else { int.parse().ok()? };
-            let frac_v: i64 = if frac.is_empty() { 0 } else { frac.parse().ok()? };
+            let int_v: i64 = if int.is_empty() || int == "-" {
+                0
+            } else {
+                int.parse().ok()?
+            };
+            let frac_v: i64 = if frac.is_empty() {
+                0
+            } else {
+                frac.parse().ok()?
+            };
             let sign = if s.starts_with('-') { -1 } else { 1 };
             return Rational::try_new(int_v * den + sign * frac_v, den);
         }
@@ -160,7 +185,8 @@ impl fmt::Display for Rational {
 
 /// Exact duration in seconds of `frames` frames at `fps`.
 pub fn frames_to_seconds(frames: i64, fps: Rational) -> Rational {
-    Rational::from_i128(frames as i128 * fps.den as i128, fps.num as i128).expect("fps must be non-zero")
+    Rational::from_i128(frames as i128 * fps.den as i128, fps.num as i128)
+        .expect("fps must be non-zero")
 }
 
 /// Number of whole frames at `fps` that fit in `seconds` (floor), with a tolerance
@@ -181,7 +207,13 @@ pub fn format_timecode(frame: i64, fps: Rational) -> String {
     let f = frame.abs();
     let ff = f % nominal;
     let total_s = f / nominal;
-    format!("{sign}{:02}:{:02}:{:02}:{:02}", total_s / 3600, (total_s / 60) % 60, total_s % 60, ff)
+    format!(
+        "{sign}{:02}:{:02}:{:02}:{:02}",
+        total_s / 3600,
+        (total_s / 60) % 60,
+        total_s % 60,
+        ff
+    )
 }
 
 #[cfg(test)]
@@ -197,7 +229,10 @@ mod tests {
 
     #[test]
     fn parses_ffmpeg_rates() {
-        assert_eq!(Rational::parse("30000/1001"), Some(Rational::new(30000, 1001)));
+        assert_eq!(
+            Rational::parse("30000/1001"),
+            Some(Rational::new(30000, 1001))
+        );
         assert_eq!(Rational::parse("25"), Some(Rational::from_int(25)));
         assert_eq!(Rational::parse("4.010000"), Some(Rational::new(401, 100)));
         assert_eq!(Rational::parse("0/0"), None);
@@ -207,15 +242,30 @@ mod tests {
     fn frame_conversions_are_exact() {
         let ntsc = Rational::new(30000, 1001);
         assert_eq!(frames_to_seconds(30000, ntsc), Rational::from_int(1001));
-        assert_eq!(seconds_to_frames_floor(Rational::from_int(2), Rational::from_int(30)), 60);
-        assert_eq!(seconds_to_frames_floor(Rational::new(1, 3), Rational::from_int(30)), 10);
-        assert_eq!(seconds_to_frames_floor(Rational::new(4, 100), Rational::from_int(25)), 1);
+        assert_eq!(
+            seconds_to_frames_floor(Rational::from_int(2), Rational::from_int(30)),
+            60
+        );
+        assert_eq!(
+            seconds_to_frames_floor(Rational::new(1, 3), Rational::from_int(30)),
+            10
+        );
+        assert_eq!(
+            seconds_to_frames_floor(Rational::new(4, 100), Rational::from_int(25)),
+            1
+        );
     }
 
     #[test]
     fn timecode() {
         assert_eq!(format_timecode(0, Rational::from_int(30)), "00:00:00:00");
-        assert_eq!(format_timecode(30 * 3661 + 7, Rational::from_int(30)), "01:01:01:07");
-        assert_eq!(format_timecode(31, Rational::new(30000, 1001)), "00:00:01:01");
+        assert_eq!(
+            format_timecode(30 * 3661 + 7, Rational::from_int(30)),
+            "01:01:01:07"
+        );
+        assert_eq!(
+            format_timecode(31, Rational::new(30000, 1001)),
+            "00:00:01:01"
+        );
     }
 }

@@ -35,7 +35,11 @@ pub enum TrimEdge {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum EditCommand {
     /// Place an asset on a track (overwrite edit). When the asset has both picture and
     /// sound and the target is a video track, a linked audio clip is also placed.
@@ -51,15 +55,34 @@ pub enum EditCommand {
         include_linked_audio: bool,
     },
     /// Move a clip (and its linked clips by the same delta). Overwrites what it lands on.
-    MoveClip { clip_id: ClipId, track_id: Option<TrackId>, start: i64 },
+    MoveClip {
+        clip_id: ClipId,
+        track_id: Option<TrackId>,
+        start: i64,
+    },
     /// Move one edge of a clip (and linked clips) to `frame`, clamped to source media
     /// limits and neighbouring clips.
-    TrimClip { clip_id: ClipId, edge: TrimEdge, frame: i64 },
+    TrimClip {
+        clip_id: ClipId,
+        edge: TrimEdge,
+        frame: i64,
+    },
     /// Split clips at `frame`. Empty `clip_ids` splits every clip under the frame on
     /// unlocked tracks.
-    Split { frame: i64, #[serde(default)] clip_ids: Vec<ClipId> },
-    DeleteClips { clip_ids: Vec<ClipId>, #[serde(default)] ripple: bool },
-    SetClipParams { clip_id: ClipId, params: ClipParams },
+    Split {
+        frame: i64,
+        #[serde(default)]
+        clip_ids: Vec<ClipId>,
+    },
+    DeleteClips {
+        clip_ids: Vec<ClipId>,
+        #[serde(default)]
+        ripple: bool,
+    },
+    SetClipParams {
+        clip_id: ClipId,
+        params: ClipParams,
+    },
     SetTrackState {
         track_id: TrackId,
         #[serde(default)]
@@ -69,7 +92,9 @@ pub enum EditCommand {
         #[serde(default)]
         solo: Option<bool>,
     },
-    AddTrack { kind: TrackKind },
+    AddTrack {
+        kind: TrackKind,
+    },
 }
 
 fn default_true() -> bool {
@@ -106,7 +131,10 @@ pub fn apply_command(project: &mut Project, cmd: &EditCommand) -> Result<EditOut
     let created = apply_inner(&mut work, cmd)?;
     validate_project(&work).map_err(|e| EditError::Invalid(format!("edit rejected: {e}")))?;
     *project = work;
-    Ok(EditOutcome { label: cmd.label().into(), created })
+    Ok(EditOutcome {
+        label: cmd.label().into(),
+        created,
+    })
 }
 
 fn ensure_unlocked(seq: &Sequence, ti: usize) -> Result<(), EditError> {
@@ -119,13 +147,18 @@ fn ensure_unlocked(seq: &Sequence, ti: usize) -> Result<(), EditError> {
 }
 
 fn track_index(seq: &Sequence, id: TrackId) -> Result<usize, EditError> {
-    seq.tracks.iter().position(|t| t.id == id).ok_or(EditError::UnknownTrack(id))
+    seq.tracks
+        .iter()
+        .position(|t| t.id == id)
+        .ok_or(EditError::UnknownTrack(id))
 }
 
 /// The clip plus every clip sharing its link id.
 fn link_group(seq: &Sequence, clip_id: ClipId) -> Result<Vec<ClipId>, EditError> {
     let clip = seq.clip(clip_id).ok_or(EditError::UnknownClip(clip_id))?;
-    let Some(link) = clip.link else { return Ok(vec![clip_id]) };
+    let Some(link) = clip.link else {
+        return Ok(vec![clip_id]);
+    };
     let mut ids = vec![clip_id];
     for t in &seq.tracks {
         for c in &t.clips {
@@ -192,25 +225,56 @@ fn clear_range(seq: &mut Sequence, ti: usize, s: i64, e: i64, exclude: &HashSet<
 
 fn apply_inner(project: &mut Project, cmd: &EditCommand) -> Result<Vec<ClipId>, EditError> {
     match cmd {
-        EditCommand::AddClip { asset_id, track_id, start, source_in, duration, include_linked_audio } => {
-            add_clip(project, *asset_id, *track_id, *start, *source_in, *duration, *include_linked_audio)
-        }
-        EditCommand::MoveClip { clip_id, track_id, start } => {
-            move_clip(&mut project.sequence, *clip_id, *track_id, *start).map(|_| vec![])
-        }
-        EditCommand::TrimClip { clip_id, edge, frame } => trim_clip(project, *clip_id, *edge, *frame).map(|_| vec![]),
+        EditCommand::AddClip {
+            asset_id,
+            track_id,
+            start,
+            source_in,
+            duration,
+            include_linked_audio,
+        } => add_clip(
+            project,
+            *asset_id,
+            *track_id,
+            *start,
+            *source_in,
+            *duration,
+            *include_linked_audio,
+        ),
+        EditCommand::MoveClip {
+            clip_id,
+            track_id,
+            start,
+        } => move_clip(&mut project.sequence, *clip_id, *track_id, *start).map(|_| vec![]),
+        EditCommand::TrimClip {
+            clip_id,
+            edge,
+            frame,
+        } => trim_clip(project, *clip_id, *edge, *frame).map(|_| vec![]),
         EditCommand::Split { frame, clip_ids } => split(&mut project.sequence, *frame, clip_ids),
-        EditCommand::DeleteClips { clip_ids, ripple } => delete(&mut project.sequence, clip_ids, *ripple).map(|_| vec![]),
+        EditCommand::DeleteClips { clip_ids, ripple } => {
+            delete(&mut project.sequence, clip_ids, *ripple).map(|_| vec![])
+        }
         EditCommand::SetClipParams { clip_id, params } => {
             params.validate().map_err(EditError::Invalid)?;
             let seq = &mut project.sequence;
-            let (ti, ci) = seq.locate_clip(*clip_id).ok_or(EditError::UnknownClip(*clip_id))?;
+            let (ti, ci) = seq
+                .locate_clip(*clip_id)
+                .ok_or(EditError::UnknownClip(*clip_id))?;
             ensure_unlocked(seq, ti)?;
             seq.tracks[ti].clips[ci].params = params.clone();
             Ok(vec![])
         }
-        EditCommand::SetTrackState { track_id, muted, locked, solo } => {
-            let t = project.sequence.track_mut(*track_id).ok_or(EditError::UnknownTrack(*track_id))?;
+        EditCommand::SetTrackState {
+            track_id,
+            muted,
+            locked,
+            solo,
+        } => {
+            let t = project
+                .sequence
+                .track_mut(*track_id)
+                .ok_or(EditError::UnknownTrack(*track_id))?;
             if let Some(v) = muted {
                 t.muted = *v;
             }
@@ -229,10 +293,22 @@ fn apply_inner(project: &mut Project, cmd: &EditCommand) -> Result<Vec<ClipId>, 
                 TrackKind::Video => format!("V{n}"),
                 TrackKind::Audio => format!("A{n}"),
             };
-            let track = Track { id: Uuid::new_v4(), kind: *kind, name, muted: false, locked: false, solo: false, clips: vec![] };
+            let track = Track {
+                id: Uuid::new_v4(),
+                kind: *kind,
+                name,
+                muted: false,
+                locked: false,
+                solo: false,
+                clips: vec![],
+            };
             // Keep video tracks grouped before audio tracks.
             let pos = match kind {
-                TrackKind::Video => seq.tracks.iter().rposition(|t| t.kind == TrackKind::Video).map_or(0, |i| i + 1),
+                TrackKind::Video => seq
+                    .tracks
+                    .iter()
+                    .rposition(|t| t.kind == TrackKind::Video)
+                    .map_or(0, |i| i + 1),
                 TrackKind::Audio => seq.tracks.len(),
             };
             seq.tracks.insert(pos, track);
@@ -250,45 +326,71 @@ fn add_clip(
     duration: Option<i64>,
     include_linked_audio: bool,
 ) -> Result<Vec<ClipId>, EditError> {
-    let asset = project.asset(asset_id).ok_or(EditError::UnknownAsset(asset_id))?.clone();
+    let asset = project
+        .asset(asset_id)
+        .ok_or(EditError::UnknownAsset(asset_id))?
+        .clone();
     let seq = &mut project.sequence;
     let ti = track_index(seq, track_id)?;
     ensure_unlocked(seq, ti)?;
     if start < 0 {
-        return Err(EditError::Invalid("clips cannot start before 00:00:00:00".into()));
+        return Err(EditError::Invalid(
+            "clips cannot start before 00:00:00:00".into(),
+        ));
     }
     let kind = seq.tracks[ti].kind;
     let has_picture = asset.media.video.is_some();
     let has_sound = asset.media.audio.is_some();
     match kind {
         TrackKind::Video if !has_picture => {
-            return Err(EditError::Invalid(format!("\"{}\" has no video; place it on an audio track", asset.name)))
+            return Err(EditError::Invalid(format!(
+                "\"{}\" has no video; place it on an audio track",
+                asset.name
+            )))
         }
         TrackKind::Audio if !has_sound => {
-            return Err(EditError::Invalid(format!("\"{}\" has no audio stream", asset.name)))
+            return Err(EditError::Invalid(format!(
+                "\"{}\" has no audio stream",
+                asset.name
+            )))
         }
         _ => {}
     }
     let source_in = source_in.unwrap_or(Rational::ZERO);
     if source_in < Rational::ZERO {
-        return Err(EditError::Invalid("source in-point cannot be negative".into()));
+        return Err(EditError::Invalid(
+            "source in-point cannot be negative".into(),
+        ));
     }
     let available = seq.available_frames(&asset, source_in);
-    let default_len = available.unwrap_or(IMAGE_DEFAULT_SECONDS * seq.frame_rate.num() / seq.frame_rate.den());
+    let default_len =
+        available.unwrap_or(IMAGE_DEFAULT_SECONDS * seq.frame_rate.num() / seq.frame_rate.den());
     let duration = duration.unwrap_or(default_len);
     if duration <= 0 {
-        return Err(EditError::Invalid("the selected source range is shorter than one frame".into()));
+        return Err(EditError::Invalid(
+            "the selected source range is shorter than one frame".into(),
+        ));
     }
     if let Some(avail) = available {
         if duration > avail {
-            return Err(EditError::Invalid(format!("only {avail} frames of media are available from the in-point")));
+            return Err(EditError::Invalid(format!(
+                "only {avail} frames of media are available from the in-point"
+            )));
         }
     }
 
     let link = (kind == TrackKind::Video && has_sound && include_linked_audio).then(Uuid::new_v4);
     let mut created = Vec::new();
     let mut place = |seq: &mut Sequence, ti: usize, link: Option<Uuid>| {
-        let clip = Clip { id: Uuid::new_v4(), asset_id, start, duration, source_in, link, params: ClipParams::default() };
+        let clip = Clip {
+            id: Uuid::new_v4(),
+            asset_id,
+            start,
+            duration,
+            source_in,
+            link,
+            params: ClipParams::default(),
+        };
         clear_range(seq, ti, start, start + duration, &HashSet::new());
         created.push(clip.id);
         seq.tracks[ti].clips.push(clip);
@@ -298,8 +400,13 @@ fn add_clip(
 
     if link.is_some() {
         // Pair Vn with An (same ordinal), else the first unlocked audio track.
-        let ordinal = seq.tracks[..ti].iter().filter(|t| t.kind == TrackKind::Video).count();
-        let audio: Vec<usize> = (0..seq.tracks.len()).filter(|&i| seq.tracks[i].kind == TrackKind::Audio).collect();
+        let ordinal = seq.tracks[..ti]
+            .iter()
+            .filter(|t| t.kind == TrackKind::Video)
+            .count();
+        let audio: Vec<usize> = (0..seq.tracks.len())
+            .filter(|&i| seq.tracks[i].kind == TrackKind::Audio)
+            .collect();
         let target = audio
             .get(ordinal)
             .copied()
@@ -308,22 +415,33 @@ fn add_clip(
         match target {
             Some(ai) => place(seq, ai, link),
             None => {
-                return Err(EditError::Invalid("no unlocked audio track is available for the linked audio".into()))
+                return Err(EditError::Invalid(
+                    "no unlocked audio track is available for the linked audio".into(),
+                ))
             }
         }
     }
     Ok(created)
 }
 
-fn move_clip(seq: &mut Sequence, clip_id: ClipId, track_id: Option<TrackId>, start: i64) -> Result<(), EditError> {
+fn move_clip(
+    seq: &mut Sequence,
+    clip_id: ClipId,
+    track_id: Option<TrackId>,
+    start: i64,
+) -> Result<(), EditError> {
     let group = link_group(seq, clip_id)?;
-    let (pti, pci) = seq.locate_clip(clip_id).ok_or(EditError::UnknownClip(clip_id))?;
+    let (pti, pci) = seq
+        .locate_clip(clip_id)
+        .ok_or(EditError::UnknownClip(clip_id))?;
     let dest_ti = match track_id {
         Some(id) => track_index(seq, id)?,
         None => pti,
     };
     if seq.tracks[dest_ti].kind != seq.tracks[pti].kind {
-        return Err(EditError::Invalid("clips can only move between tracks of the same kind".into()));
+        return Err(EditError::Invalid(
+            "clips can only move between tracks of the same kind".into(),
+        ));
     }
     ensure_unlocked(seq, dest_ti)?;
     let mut delta = start - seq.tracks[pti].clips[pci].start;
@@ -355,7 +473,12 @@ fn move_clip(seq: &mut Sequence, clip_id: ClipId, track_id: Option<TrackId>, sta
     Ok(())
 }
 
-fn trim_clip(project: &mut Project, clip_id: ClipId, edge: TrimEdge, frame: i64) -> Result<(), EditError> {
+fn trim_clip(
+    project: &mut Project,
+    clip_id: ClipId,
+    edge: TrimEdge,
+    frame: i64,
+) -> Result<(), EditError> {
     let seq = &project.sequence;
     let primary = seq.clip(clip_id).ok_or(EditError::UnknownClip(clip_id))?;
     let requested = match edge {
@@ -369,7 +492,9 @@ fn trim_clip(project: &mut Project, clip_id: ClipId, edge: TrimEdge, frame: i64)
         ensure_unlocked(seq, ti)?;
         let track = &seq.tracks[ti];
         let c = &track.clips[ci];
-        let asset = project.asset(c.asset_id).ok_or(EditError::UnknownAsset(c.asset_id))?;
+        let asset = project
+            .asset(c.asset_id)
+            .ok_or(EditError::UnknownAsset(c.asset_id))?;
         let is_image = asset.media.kind == MediaKind::Image;
         match edge {
             TrimEdge::Start => {
@@ -393,7 +518,9 @@ fn trim_clip(project: &mut Project, clip_id: ClipId, edge: TrimEdge, frame: i64)
         }
     }
     if lo > hi {
-        return Err(EditError::Invalid("this trim is not possible with the linked clips' media".into()));
+        return Err(EditError::Invalid(
+            "this trim is not possible with the linked clips' media".into(),
+        ));
     }
     let delta = requested.clamp(lo, hi);
     if delta == 0 {
@@ -422,7 +549,12 @@ fn split(seq: &mut Sequence, frame: i64, clip_ids: &[ClipId]) -> Result<Vec<Clip
         seq.tracks
             .iter()
             .filter(|t| !t.locked)
-            .flat_map(|t| t.clips.iter().filter(|c| c.start < frame && frame < c.end()).map(|c| c.id))
+            .flat_map(|t| {
+                t.clips
+                    .iter()
+                    .filter(|c| c.start < frame && frame < c.end())
+                    .map(|c| c.id)
+            })
             .collect()
     } else {
         let mut set = Vec::new();
@@ -450,14 +582,18 @@ fn split(seq: &mut Sequence, frame: i64, clip_ids: &[ClipId]) -> Result<Vec<Clip
         right.start = frame;
         right.duration = c.end() - frame;
         right.source_in = advance_source(c.source_in, frame - c.start, fps);
-        right.link = c.link.map(|l| *relink.entry(l).or_insert_with(Uuid::new_v4));
+        right.link = c
+            .link
+            .map(|l| *relink.entry(l).or_insert_with(Uuid::new_v4));
         seq.tracks[ti].clips[ci].duration = frame - seq.tracks[ti].clips[ci].start;
         created.push(right.id);
         seq.tracks[ti].clips.push(right);
         sort_track(&mut seq.tracks[ti]);
     }
     if created.is_empty() {
-        return Err(EditError::Invalid("there is no clip under the playhead to split".into()));
+        return Err(EditError::Invalid(
+            "there is no clip under the playhead to split".into(),
+        ));
     }
     Ok(created)
 }
@@ -482,7 +618,11 @@ fn delete(seq: &mut Sequence, clip_ids: &[ClipId], ripple: bool) -> Result<(), E
         if ripple {
             removed.sort();
             for c in &mut track.clips {
-                let shift: i64 = removed.iter().filter(|(s, _)| *s < c.start).map(|(_, d)| d).sum();
+                let shift: i64 = removed
+                    .iter()
+                    .filter(|(s, _)| *s < c.start)
+                    .map(|(_, d)| d)
+                    .sum();
                 c.start -= shift;
             }
         }

@@ -1,0 +1,17 @@
+[package]
+name = "pulsecut-media-engine"
+description = "PulseCut media engine: FFmpeg probing, render-plan compilation, preview frames, playback streams and export"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+pulsecut-project-model = { path = "../project-model" }
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

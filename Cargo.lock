@@ -282,6 +282,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "pulsecut-media-engine"
+version = "0.1.0"
+dependencies = [
+ "pulsecut-project-model",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "uuid",
+]
+
+[[package]]
 name = "pulsecut-project-model"
 version = "0.1.0"
 dependencies = [

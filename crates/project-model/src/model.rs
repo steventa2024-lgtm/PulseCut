@@ -126,15 +126,27 @@ pub struct ClipParams {
 
 impl Default for ClipParams {
     fn default() -> Self {
-        ClipParams { opacity: 1.0, scale: 1.0, position_x: 0.0, position_y: 0.0, gain_db: 0.0 }
+        ClipParams {
+            opacity: 1.0,
+            scale: 1.0,
+            position_x: 0.0,
+            position_y: 0.0,
+            gain_db: 0.0,
+        }
     }
 }
 
 impl ClipParams {
     pub fn validate(&self) -> Result<(), String> {
-        let finite = [self.opacity, self.scale, self.position_x, self.position_y, self.gain_db]
-            .iter()
-            .all(|v| v.is_finite());
+        let finite = [
+            self.opacity,
+            self.scale,
+            self.position_x,
+            self.position_y,
+            self.gain_db,
+        ]
+        .iter()
+        .all(|v| v.is_finite());
         if !finite {
             return Err("clip parameters must be finite numbers".into());
         }
@@ -194,7 +206,13 @@ impl Project {
 }
 
 impl Sequence {
-    pub fn new(name: impl Into<String>, width: u32, height: u32, frame_rate: Rational, sample_rate: u32) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        width: u32,
+        height: u32,
+        frame_rate: Rational,
+        sample_rate: u32,
+    ) -> Self {
         let track = |kind, name: &str| Track {
             id: Uuid::new_v4(),
             kind,
@@ -222,7 +240,11 @@ impl Sequence {
 
     /// End of the last clip, in frames.
     pub fn duration_frames(&self) -> i64 {
-        self.tracks.iter().flat_map(|t| t.clips.iter().map(Clip::end)).max().unwrap_or(0)
+        self.tracks
+            .iter()
+            .flat_map(|t| t.clips.iter().map(Clip::end))
+            .max()
+            .unwrap_or(0)
     }
 
     pub fn track(&self, id: TrackId) -> Option<&Track> {

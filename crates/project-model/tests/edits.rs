@@ -23,7 +23,11 @@ fn video_asset(name: &str, seconds: i64, fps: i64) -> Asset {
                 rotation: 0,
                 hdr: false,
             }),
-            audio: Some(AudioStreamInfo { codec: "aac".into(), sample_rate: 48000, channels: 2 }),
+            audio: Some(AudioStreamInfo {
+                codec: "aac".into(),
+                sample_rate: 48000,
+                channels: 2,
+            }),
             audio_stream_count: 1,
         },
     }
@@ -49,16 +53,35 @@ fn tracks(p: &Project) -> (Uuid, Uuid, Uuid, Uuid) {
 }
 
 fn fixture() -> Fx {
-    let mut p = Project::new("t", Sequence::new("Main", 640, 360, Rational::from_int(30), 48000));
-    let (a, b, m) = (video_asset("a.mp4", 4, 30), video_asset("b.mov", 3, 25), audio_asset("m.wav", 6));
+    let mut p = Project::new(
+        "t",
+        Sequence::new("Main", 640, 360, Rational::from_int(30), 48000),
+    );
+    let (a, b, m) = (
+        video_asset("a.mp4", 4, 30),
+        video_asset("b.mov", 3, 25),
+        audio_asset("m.wav", 6),
+    );
     let (clip_a, clip_b, music) = (a.id, b.id, m.id);
     p.assets = vec![a, b, m];
-    Fx { editor: Editor::new(p), clip_a, clip_b, music }
+    Fx {
+        editor: Editor::new(p),
+        clip_a,
+        clip_b,
+        music,
+    }
 }
 
 fn add(editor: &mut Editor, asset: Uuid, track: Uuid, start: i64) -> Vec<Uuid> {
     editor
-        .apply(&EditCommand::AddClip { asset_id: asset, track_id: track, start, source_in: None, duration: None, include_linked_audio: true })
+        .apply(&EditCommand::AddClip {
+            asset_id: asset,
+            track_id: track,
+            start,
+            source_in: None,
+            duration: None,
+            include_linked_audio: true,
+        })
         .unwrap()
         .created
 }
@@ -72,7 +95,10 @@ fn add_video_creates_linked_audio_on_paired_track() {
     let seq = &fx.editor.project().sequence;
     let v = seq.clip(created[0]).unwrap();
     let a = seq.clip(created[1]).unwrap();
-    assert_eq!(seq.locate_clip(created[1]).unwrap().0, seq.tracks.iter().position(|t| t.id == a1).unwrap());
+    assert_eq!(
+        seq.locate_clip(created[1]).unwrap().0,
+        seq.tracks.iter().position(|t| t.id == a1).unwrap()
+    );
     assert_eq!((v.start, v.duration), (0, 120));
     assert_eq!(v.link, a.link);
     assert!(v.link.is_some());
@@ -83,7 +109,10 @@ fn mixed_rate_source_length_is_exact() {
     let mut fx = fixture();
     let (v1, ..) = tracks(fx.editor.project());
     let ids = add(&mut fx.editor, fx.clip_b, v1, 0);
-    assert_eq!(fx.editor.project().sequence.clip(ids[0]).unwrap().duration, 90);
+    assert_eq!(
+        fx.editor.project().sequence.clip(ids[0]).unwrap().duration,
+        90
+    );
 }
 
 #[test]
@@ -92,10 +121,23 @@ fn overwrite_splits_underlying_clip() {
     let (_, _, _, a2) = tracks(fx.editor.project());
     add(&mut fx.editor, fx.music, a2, 0);
     fx.editor
-        .apply(&EditCommand::AddClip { asset_id: fx.music, track_id: a2, start: 30, source_in: None, duration: Some(30), include_linked_audio: true })
+        .apply(&EditCommand::AddClip {
+            asset_id: fx.music,
+            track_id: a2,
+            start: 30,
+            source_in: None,
+            duration: Some(30),
+            include_linked_audio: true,
+        })
         .unwrap();
     let clips = &fx.editor.project().sequence.tracks[3].clips;
-    assert_eq!(clips.iter().map(|c| (c.start, c.duration)).collect::<Vec<_>>(), vec![(0, 30), (30, 30), (60, 120)]);
+    assert_eq!(
+        clips
+            .iter()
+            .map(|c| (c.start, c.duration))
+            .collect::<Vec<_>>(),
+        vec![(0, 30), (30, 30), (60, 120)]
+    );
     assert_eq!(clips[2].source_in, Rational::from_int(2));
 }
 
@@ -106,29 +148,68 @@ fn split_trim_move_delete_and_undo_roundtrip() {
     let ids = add(&mut fx.editor, fx.clip_a, v1, 0);
     let original = fx.editor.project().clone();
 
-    let right = fx.editor.apply(&EditCommand::Split { frame: 45, clip_ids: vec![] }).unwrap().created;
+    let right = fx
+        .editor
+        .apply(&EditCommand::Split {
+            frame: 45,
+            clip_ids: vec![],
+        })
+        .unwrap()
+        .created;
     assert_eq!(right.len(), 2, "video and linked audio both split");
     let seq = &fx.editor.project().sequence;
     let r = seq.clip(right[0]).unwrap();
-    assert_eq!((r.start, r.duration, r.source_in), (45, 75, Rational::new(3, 2)));
+    assert_eq!(
+        (r.start, r.duration, r.source_in),
+        (45, 75, Rational::new(3, 2))
+    );
     let r_partner = seq.clip(right[1]).unwrap();
     assert_eq!(r.link, r_partner.link);
     assert_ne!(r.link, seq.clip(ids[0]).unwrap().link);
 
-    fx.editor.apply(&EditCommand::TrimClip { clip_id: ids[0], edge: TrimEdge::Start, frame: 10 }).unwrap();
+    fx.editor
+        .apply(&EditCommand::TrimClip {
+            clip_id: ids[0],
+            edge: TrimEdge::Start,
+            frame: 10,
+        })
+        .unwrap();
     let left = fx.editor.project().sequence.clip(ids[0]).unwrap().clone();
-    assert_eq!((left.start, left.duration, left.source_in), (10, 35, Rational::new(1, 3)));
+    assert_eq!(
+        (left.start, left.duration, left.source_in),
+        (10, 35, Rational::new(1, 3))
+    );
     let partner = fx.editor.project().sequence.clip(ids[1]).unwrap();
     assert_eq!((partner.start, partner.duration), (10, 35));
 
     // Trimming the start earlier than the source head is clamped.
-    fx.editor.apply(&EditCommand::TrimClip { clip_id: ids[0], edge: TrimEdge::Start, frame: -50 }).unwrap();
+    fx.editor
+        .apply(&EditCommand::TrimClip {
+            clip_id: ids[0],
+            edge: TrimEdge::Start,
+            frame: -50,
+        })
+        .unwrap();
     assert_eq!(fx.editor.project().sequence.clip(ids[0]).unwrap().start, 0);
 
-    fx.editor.apply(&EditCommand::MoveClip { clip_id: right[0], track_id: None, start: 200 }).unwrap();
-    assert_eq!(fx.editor.project().sequence.clip(right[1]).unwrap().start, 200);
+    fx.editor
+        .apply(&EditCommand::MoveClip {
+            clip_id: right[0],
+            track_id: None,
+            start: 200,
+        })
+        .unwrap();
+    assert_eq!(
+        fx.editor.project().sequence.clip(right[1]).unwrap().start,
+        200
+    );
 
-    fx.editor.apply(&EditCommand::DeleteClips { clip_ids: vec![ids[0]], ripple: false }).unwrap();
+    fx.editor
+        .apply(&EditCommand::DeleteClips {
+            clip_ids: vec![ids[0]],
+            ripple: false,
+        })
+        .unwrap();
     assert!(fx.editor.project().sequence.clip(ids[1]).is_none());
 
     for _ in 0..5 {
@@ -146,12 +227,39 @@ fn end_trim_clamps_to_media_and_neighbour() {
     let mut fx = fixture();
     let (v1, ..) = tracks(fx.editor.project());
     let a = add(&mut fx.editor, fx.clip_a, v1, 0);
-    fx.editor.apply(&EditCommand::TrimClip { clip_id: a[0], edge: TrimEdge::End, frame: 60 }).unwrap();
-    fx.editor.apply(&EditCommand::TrimClip { clip_id: a[0], edge: TrimEdge::End, frame: 1000 }).unwrap();
-    assert_eq!(fx.editor.project().sequence.clip(a[0]).unwrap().duration, 120);
-    fx.editor.apply(&EditCommand::TrimClip { clip_id: a[0], edge: TrimEdge::End, frame: 60 }).unwrap();
+    fx.editor
+        .apply(&EditCommand::TrimClip {
+            clip_id: a[0],
+            edge: TrimEdge::End,
+            frame: 60,
+        })
+        .unwrap();
+    fx.editor
+        .apply(&EditCommand::TrimClip {
+            clip_id: a[0],
+            edge: TrimEdge::End,
+            frame: 1000,
+        })
+        .unwrap();
+    assert_eq!(
+        fx.editor.project().sequence.clip(a[0]).unwrap().duration,
+        120
+    );
+    fx.editor
+        .apply(&EditCommand::TrimClip {
+            clip_id: a[0],
+            edge: TrimEdge::End,
+            frame: 60,
+        })
+        .unwrap();
     add(&mut fx.editor, fx.clip_b, v1, 80);
-    fx.editor.apply(&EditCommand::TrimClip { clip_id: a[0], edge: TrimEdge::End, frame: 1000 }).unwrap();
+    fx.editor
+        .apply(&EditCommand::TrimClip {
+            clip_id: a[0],
+            edge: TrimEdge::End,
+            frame: 1000,
+        })
+        .unwrap();
     assert_eq!(fx.editor.project().sequence.clip(a[0]).unwrap().end(), 80);
 }
 
@@ -160,13 +268,36 @@ fn locked_tracks_reject_edits_and_failed_edits_do_not_mutate() {
     let mut fx = fixture();
     let (v1, ..) = tracks(fx.editor.project());
     let a = add(&mut fx.editor, fx.clip_a, v1, 0);
-    fx.editor.apply(&EditCommand::SetTrackState { track_id: v1, muted: None, locked: Some(true), solo: None }).unwrap();
+    fx.editor
+        .apply(&EditCommand::SetTrackState {
+            track_id: v1,
+            muted: None,
+            locked: Some(true),
+            solo: None,
+        })
+        .unwrap();
     let before = fx.editor.project().clone();
-    let err = fx.editor.apply(&EditCommand::MoveClip { clip_id: a[0], track_id: None, start: 10 }).unwrap_err();
+    let err = fx
+        .editor
+        .apply(&EditCommand::MoveClip {
+            clip_id: a[0],
+            track_id: None,
+            start: 10,
+        })
+        .unwrap_err();
     assert!(matches!(err, EditError::TrackLocked(_)));
     assert_eq!(fx.editor.project(), &before);
-    let bad = ClipParams { opacity: 2.0, ..Default::default() };
-    assert!(fx.editor.apply(&EditCommand::SetClipParams { clip_id: a[1], params: bad }).is_err());
+    let bad = ClipParams {
+        opacity: 2.0,
+        ..Default::default()
+    };
+    assert!(fx
+        .editor
+        .apply(&EditCommand::SetClipParams {
+            clip_id: a[1],
+            params: bad
+        })
+        .is_err());
     assert_eq!(fx.editor.project(), &before);
 }
 
@@ -174,7 +305,14 @@ fn locked_tracks_reject_edits_and_failed_edits_do_not_mutate() {
 fn audio_only_asset_rejected_on_video_track() {
     let mut fx = fixture();
     let (v1, ..) = tracks(fx.editor.project());
-    let r = fx.editor.apply(&EditCommand::AddClip { asset_id: fx.music, track_id: v1, start: 0, source_in: None, duration: None, include_linked_audio: true });
+    let r = fx.editor.apply(&EditCommand::AddClip {
+        asset_id: fx.music,
+        track_id: v1,
+        start: 0,
+        source_in: None,
+        duration: None,
+        include_linked_audio: true,
+    });
     assert!(r.is_err());
 }
 
@@ -184,7 +322,12 @@ fn ripple_delete_closes_gap() {
     let (v1, ..) = tracks(fx.editor.project());
     let a = add(&mut fx.editor, fx.clip_a, v1, 0);
     let b = add(&mut fx.editor, fx.clip_b, v1, 120);
-    fx.editor.apply(&EditCommand::DeleteClips { clip_ids: vec![a[0]], ripple: true }).unwrap();
+    fx.editor
+        .apply(&EditCommand::DeleteClips {
+            clip_ids: vec![a[0]],
+            ripple: true,
+        })
+        .unwrap();
     assert_eq!(fx.editor.project().sequence.clip(b[0]).unwrap().start, 0);
     assert_eq!(fx.editor.project().sequence.clip(b[1]).unwrap().start, 0);
 }
@@ -202,8 +345,14 @@ fn serialization_roundtrip_and_relative_relink() {
     project.assets[0].path = media.join("a.mp4").to_string_lossy().into_owned();
     let file = dir.path().join("proj.pulsecut");
     let saved = io::save(&project, &file).unwrap();
-    assert_eq!(saved.assets[0].relative_path.as_deref(), Some("media/a.mp4"));
-    assert_eq!(io::to_json(&saved).unwrap(), std::fs::read_to_string(&file).unwrap());
+    assert_eq!(
+        saved.assets[0].relative_path.as_deref(),
+        Some("media/a.mp4")
+    );
+    assert_eq!(
+        io::to_json(&saved).unwrap(),
+        std::fs::read_to_string(&file).unwrap()
+    );
 
     // Move the whole folder: absolute path breaks, relative path relinks.
     let moved = tempfile::tempdir().unwrap();
@@ -222,9 +371,17 @@ fn serialization_roundtrip_and_relative_relink() {
 
 #[test]
 fn rejects_newer_schema_and_garbage() {
-    let p = Project::new("x", Sequence::new("Main", 640, 360, Rational::from_int(30), 48000));
-    let json = io::to_json(&p).unwrap().replace("\"schemaVersion\": 1", "\"schemaVersion\": 99");
-    assert!(matches!(io::from_json(&json), Err(io::ProjectIoError::NewerSchema { found: 99, .. })));
+    let p = Project::new(
+        "x",
+        Sequence::new("Main", 640, 360, Rational::from_int(30), 48000),
+    );
+    let json = io::to_json(&p)
+        .unwrap()
+        .replace("\"schemaVersion\": 1", "\"schemaVersion\": 99");
+    assert!(matches!(
+        io::from_json(&json),
+        Err(io::ProjectIoError::NewerSchema { found: 99, .. })
+    ));
     assert!(io::from_json("{}").is_err());
     assert!(io::from_json("not json").is_err());
 }

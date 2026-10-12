@@ -35,11 +35,20 @@ pub struct HistoryState {
 
 impl Editor {
     pub fn new(project: Project) -> Self {
-        Editor { project, undo: vec![], redo: vec![], revision: 0, saved_revision: None }
+        Editor {
+            project,
+            undo: vec![],
+            redo: vec![],
+            revision: 0,
+            saved_revision: None,
+        }
     }
 
     pub fn opened(project: Project) -> Self {
-        Editor { saved_revision: Some(0), ..Editor::new(project) }
+        Editor {
+            saved_revision: Some(0),
+            ..Editor::new(project)
+        }
     }
 
     pub fn project(&self) -> &Project {
@@ -54,7 +63,11 @@ impl Editor {
     }
 
     /// Non-command mutations (import, relink) that should still be undoable.
-    pub fn mutate<T>(&mut self, label: &str, f: impl FnOnce(&mut Project) -> Result<T, EditError>) -> Result<T, EditError> {
+    pub fn mutate<T>(
+        &mut self,
+        label: &str,
+        f: impl FnOnce(&mut Project) -> Result<T, EditError>,
+    ) -> Result<T, EditError> {
         let before = self.project.clone();
         let mut work = before.clone();
         let out = f(&mut work)?;
@@ -76,7 +89,10 @@ impl Editor {
     pub fn undo(&mut self) -> Option<String> {
         let e = self.undo.pop()?;
         let current = std::mem::replace(&mut self.project, e.snapshot);
-        self.redo.push(Entry { label: e.label.clone(), snapshot: current });
+        self.redo.push(Entry {
+            label: e.label.clone(),
+            snapshot: current,
+        });
         self.revision += 1;
         Some(e.label)
     }
@@ -84,7 +100,10 @@ impl Editor {
     pub fn redo(&mut self) -> Option<String> {
         let e = self.redo.pop()?;
         let current = std::mem::replace(&mut self.project, e.snapshot);
-        self.undo.push(Entry { label: e.label.clone(), snapshot: current });
+        self.undo.push(Entry {
+            label: e.label.clone(),
+            snapshot: current,
+        });
         self.revision += 1;
         Some(e.label)
     }
