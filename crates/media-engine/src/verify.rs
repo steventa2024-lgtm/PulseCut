@@ -1,7 +1,7 @@
 //! Post-export validation: re-probe and fully decode the output file.
 
 use crate::probe::probe;
-use crate::tools::{command, FfmpegTools};
+use crate::tools::{command, ffmpeg_diagnostics, FfmpegTools};
 use crate::MediaError;
 use pulsecut_project_model::Project;
 use serde::Serialize;
@@ -91,7 +91,7 @@ pub fn verify_export(
         .args(["-f", "null", "-"])
         .output()
         .map_err(|e| MediaError::Io(format!("could not run ffmpeg for decode check: {e}")))?;
-    let errors = String::from_utf8_lossy(&decode.stderr).trim().to_string();
+    let errors = ffmpeg_diagnostics(&String::from_utf8_lossy(&decode.stderr));
     add(
         "Full decode",
         "no errors".into(),

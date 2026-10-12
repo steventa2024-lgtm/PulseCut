@@ -1,5 +1,5 @@
 use crate::plan::{compile, RenderPlan, RenderRequest};
-use crate::tools::{command, FfmpegTools};
+use crate::tools::{command, ffmpeg_diagnostics, FfmpegTools};
 use crate::MediaError;
 use pulsecut_project_model::{AssetId, Project};
 use serde::{Deserialize, Serialize};
@@ -511,8 +511,8 @@ impl PlaybackStream {
                 scan_from = buf.len().saturating_sub(1);
             }
             let stopped = stop2.load(Ordering::Relaxed);
-            let msg = tail(&log);
-            on_end(if stopped || msg.trim().is_empty() {
+            let msg = ffmpeg_diagnostics(&tail(&log));
+            on_end(if stopped || msg.is_empty() {
                 None
             } else {
                 Some(msg)

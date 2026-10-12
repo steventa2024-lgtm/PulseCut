@@ -39,6 +39,18 @@ pub fn command(program: &Path) -> Command {
     cmd
 }
 
+/// FFmpeg stderr with dynamic-loader warnings removed. glibc prints
+/// "no version information available" when `LD_LIBRARY_PATH` shadows a system
+/// library; it is not an FFmpeg error and must not fail playback or verification.
+pub fn ffmpeg_diagnostics(stderr: &str) -> String {
+    stderr
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty() && !l.contains("no version information available"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 fn candidates() -> Vec<PathBuf> {
     let mut dirs = Vec::new();
     if let Some(d) = std::env::var_os("PULSECUT_FFMPEG_DIR") {
@@ -102,5 +114,18 @@ impl FfmpegTools {
 
     pub fn has_encoder(&self, name: &str) -> bool {
         self.encoders.contains(name)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ffmpeg_diagnostics;
+
+    #[test]
+    fn loader_warnings_are_not_diagnostics() {
+        let err = "ffmpeg: /opt/lib/libncursesw.so.6: no version information available (required by /lib/libcaca.so.0)\n\n";
+        assert_eq!(ffmpeg_diagnostics(err), "");
+        let real = format!("{err}[h264 @ 0x1] corrupt macroblock\n");
+        assert_eq!(ffmpeg_diagnostics(&real), "[h264 @ 0x1] corrupt macroblock");
     }
 }
