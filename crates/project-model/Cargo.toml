@@ -1,0 +1,17 @@
+[package]
+name = "pulsecut-project-model"
+description = "Canonical PulseCut project/sequence model, edit commands, undo history and serialization"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest = "1"
+tempfile = "3"
