@@ -1,0 +1,25 @@
+[package]
+name = "pulsecut-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "PulseCut desktop shell"
+publish = false
+
+[lib]
+name = "pulsecut_desktop"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.2", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.3", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2.8.2"
+serde.workspace = true
+serde_json.workspace = true
+project-model.workspace = true
+media-engine.workspace = true
+base64 = "0.22"
+uuid.workspace = true
