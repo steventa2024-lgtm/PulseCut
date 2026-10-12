@@ -15,7 +15,7 @@ The automated tests on Linux cover this path:
 5. Trim a clip and render again so the export changes with the edit.
 6. Round-trip the project JSON and undo back to the same document.
 
-The desktop window can import media, show the bin, drag clips to tracks, play a rendered proxy, step frames, trim, split, move, delete, undo, save, reopen, and export. Those window actions are wired to the same Rust commands. They have not been exercised in a GUI session on the machine that added this slice, so the app is not marked MVP-complete. See [docs/FEATURE_MATRIX.md](docs/FEATURE_MATRIX.md).
+The desktop window can import media, show the bin, drag clips to tracks, play a rendered proxy, step frames, trim, split, move, delete, undo, save, reopen, and export. On this VM the window pass loaded the sample timeline, played the proxy, saved a `.pulsecut` file, reopened it after a delete, trimmed a clip, undid the trim, and exported a 6.000 s 1280×720 H.264/AAC MP4. Drag-to-timeline, bin search, relink, and unlink were not clicked. The app is not marked MVP-complete. See [docs/FEATURE_MATRIX.md](docs/FEATURE_MATRIX.md).
 
 ## What does not work yet
 

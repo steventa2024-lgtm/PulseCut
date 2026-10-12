@@ -182,12 +182,18 @@ function ExportDialog() {
           Export H.264 MP4
         </h2>
         <p className="mb-3 text-xs text-muted">
-          Audio is AAC at 160 kbps. The picture is scaled to fit this size with the sequence frame rate of {sequence.fpsNum}/{sequence.fpsDen}.
+          Audio is AAC at 160 kbps. The picture is scaled to fit this size with the sequence frame rate of {sequence.fpsNum}/{sequence.fpsDen}. Type a full path or use Browse.
         </p>
         <label className="prop">
           File
           <span className="flex gap-1">
-            <input className="field" value={path} readOnly placeholder="Choose a destination" />
+            <input
+              className="field"
+              value={path}
+              placeholder="/path/to/export.mp4"
+              aria-label="Export file"
+              onChange={(event) => setPath(event.target.value)}
+            />
             <button
               type="button"
               className="btn"
