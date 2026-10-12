@@ -131,7 +131,7 @@ export function findAction(e: KeyboardEvent): Action | undefined {
   return Object.values(ACTIONS).find((a) => a.keys?.some((x) => x.toUpperCase() === k.toUpperCase()));
 }
 
-export const MENUS: { label: string; items: (string | "-" | { planned: string })[] }[] = [
+export const MENUS: { label: string; items: string[] }[] = [
   { label: "File", items: ["file.new", "file.open", "-", "file.save", "file.saveAs", "-", "file.import", "file.export", "-", "file.quit"] },
   { label: "Edit", items: ["edit.undo", "edit.redo", "-", "edit.delete", "edit.rippleDelete", "-", "edit.selectAll", "edit.deselect"] },
   {
@@ -140,10 +140,6 @@ export const MENUS: { label: string; items: (string | "-" | { planned: string })
   },
   { label: "Playback", items: ["play.toggle", "-", "play.start", "play.end", "play.prev", "play.next", "play.back1s", "play.fwd1s", "play.prevEdit", "play.nextEdit"] },
   { label: "Timeline", items: ["tl.split", "tl.insertAsset", "tl.snap", "-", "tl.addVideo", "tl.addAudio"] },
-  {
-    label: "Effects",
-    items: [{ planned: "Transitions (planned — Phase 2)" }, { planned: "Titles (planned — Phase 2)" }, { planned: "Color correction (planned — Phase 3)" }],
-  },
   { label: "Window", items: ["window.resetLayout"] },
   { label: "Help", items: ["help.shortcuts", "help.status", "-", "help.about"] },
 ];

@@ -31,7 +31,7 @@ export function TopBar() {
   const selectable = (i: number) =>
     items(i)
       .map((it, idx) => ({ it, idx }))
-      .filter(({ it }) => typeof it === "string" && it !== "-")
+      .filter(({ it }) => it !== "-")
       .map(({ idx }) => idx);
 
   const run = async (id: string) => {
@@ -96,12 +96,6 @@ export function TopBar() {
               >
                 {m.items.map((it, idx) => {
                   if (it === "-") return <div key={idx} className="my-1 h-px bg-pc-border" role="separator" />;
-                  if (typeof it !== "string")
-                    return (
-                      <div key={idx} role="menuitem" aria-disabled="true" className="flex h-7 items-center px-3 text-[12px] text-pc-faint italic">
-                        {it.planned}
-                      </div>
-                    );
                   const a = ACTIONS[it];
                   const enabled = a.enabled?.() ?? true;
                   let label = a.label;

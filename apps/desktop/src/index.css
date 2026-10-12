@@ -26,6 +26,10 @@
   --font-mono: "Cascadia Mono", "JetBrains Mono", "Consolas", ui-monospace, monospace;
 }
 
+html {
+  color-scheme: dark;
+}
+
 html,
 body,
 #root {
@@ -50,6 +54,15 @@ select,
 button {
   font: inherit;
   color: inherit;
+}
+
+select {
+  background-color: var(--color-pc-bg);
+}
+
+select option {
+  background-color: var(--color-pc-panel-2);
+  color: var(--color-pc-text);
 }
 
 .tabular {

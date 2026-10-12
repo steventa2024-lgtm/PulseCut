@@ -62,7 +62,7 @@ Contrast: body text `#e6e8eb` on `#15171a` ≈ 14:1; muted `#9aa3ad` on `#15171a
 
 ## Rules
 
-- **No dead controls.** A visible enabled control must do what it says. Unimplemented features appear only as clearly labelled *planned* menu text (e.g. Effects menu) or not at all.
+- **No dead controls.** A visible enabled control must do what it says. Unimplemented features do not appear in the UI at all; they are tracked in `FEATURE_MATRIX.md`. Inspector help text may mention that something is planned.
 - Every action available from a menu has the same implementation as its shortcut and toolbar button (`ACTIONS` registry).
 - Errors are shown in place (viewer banner, export dialog) or as toasts with the underlying message; nothing fails silently.
 - Focus is always visible (`:focus-visible` 2px accent outline).
