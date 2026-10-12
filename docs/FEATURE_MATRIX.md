@@ -3,7 +3,12 @@
 Status values: **Not started · Prototype · Implemented · Tested · Released**.
 "Tested" means covered by an automated test in this repo *and* exercised manually in the app. Nothing is **Released** yet (no public binary). Difficulty: S / M / L / XL.
 
-> As of v0.1.0, "Tested" rows pass their automated tests on Linux. The manual GUI pass (import → edit → playback → save/reopen → export from the UI) on the Linux development build is still in progress, and nothing has been run on Windows.
+> As of v0.1.0, "Tested" rows pass their automated tests on Linux and were exercised in a manual GUI pass on the Linux debug build: import (including a corrupt file), drag to tracks, playback and frame-step, split/delete/trim, opacity/scale, undo/redo, save/reopen, export with verification, menus, splitters, and resizing to 1366×768. Nothing has been run on Windows.
+>
+> Known minor issues from that pass:
+> - When the left panel is short, the selected-asset metadata block squeezes the media list down to about one row.
+> - Clip hover tooltips can keep showing the previous start time right after a drag.
+> - WebKitGTK logs `gtk_tree_model_get_iter_first` assertions; these come from the toolkit, not PulseCut.
 
 Comparisons with other editors refer to publicly documented, user-visible workflows only; no claim of parity is made for anything not listed as Tested.
 
