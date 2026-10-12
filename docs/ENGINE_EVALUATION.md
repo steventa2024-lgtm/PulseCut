@@ -59,6 +59,7 @@ Two FFmpeg behaviors matter:
 | Missing or offline media | Render returns `MissingMedia` and the UI shows the message. |
 | Empty or fully muted timeline | Render returns an error instead of an empty success. |
 | Cancel | The partial file is deleted and the UI receives `render-cancelled`. |
+| Linux playback says the file cannot be played | The proxy is valid, but WebKitGTK decodes through GStreamer. Without `gstreamer1.0-libav` (or another H.264 decoder) the media element reports error 4. |
 | Unsupported size or preset | Even dimensions from 160×160 through 7680×4320. x264 presets are a whitelist. CRF is 0–51. |
 
 Hardware decode and encode were not measured. This VM has no GPU. Windows MLT and Windows FFmpeg packaging were not built here.

@@ -36,6 +36,13 @@ export const api = {
   discardRecovery: () => invoke<void>("discard_recovery"),
   loadSample: () => invoke<UiState>("load_sample"),
   assetUrl: (path: string) => convertFileSrc(path),
+  previewUrl: (path: string, previewBase: string) => {
+    const name = path.split(/[/\\]/).pop() ?? "";
+    if (previewBase && /^[0-9a-f]{64}\.mp4$/i.test(name)) {
+      return `${previewBase.replace(/\/$/, "")}/${name}`;
+    }
+    return convertFileSrc(path);
+  },
   onRenderProgress: (handler: (event: RenderProgress) => void): Promise<UnlistenFn> =>
     listen<RenderProgress>("render-progress", (event) => handler(event.payload)),
   onRenderDone: (handler: (event: RenderDone) => void): Promise<UnlistenFn> =>

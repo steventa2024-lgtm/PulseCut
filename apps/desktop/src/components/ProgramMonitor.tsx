@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "../api";
 import { formatTimecode } from "../lib/time";
 import { useEditor } from "../state/EditorContext";
@@ -8,13 +8,8 @@ export function ProgramMonitor() {
   const { fpsNum, fpsDen, width, height } = editor.state.project.sequence;
   const [safe, setSafe] = useState(false);
   const previewFresh = editor.preview?.revision === editor.state.revision;
-  const src = editor.preview && previewFresh ? api.assetUrl(editor.preview.path) : "";
-
-  useEffect(() => {
-    const video = editor.videoRef.current;
-    if (!video) return;
-    if (video.src !== src) video.src = src;
-  }, [editor.videoRef, src]);
+  const src =
+    editor.preview && previewFresh ? api.previewUrl(editor.preview.path, editor.previewBase) : "";
 
   return (
     <section className="panel" aria-label="Program monitor">
@@ -42,7 +37,18 @@ export function ProgramMonitor() {
       <div className="monitor">
         <video
           ref={editor.videoRef}
+          src={src || undefined}
+          preload="auto"
           onLoadedData={editor.onVideoReady}
+          onError={(event) => {
+            const video = event.currentTarget;
+            const code = video.error?.code ?? 0;
+            editor.reportPlaybackError(
+              code === 4
+                ? "The preview file could not be played. This WebKit build needs a GStreamer H.264 decoder (gstreamer1.0-libav)."
+                : `The preview file could not be played (media error ${code}).`,
+            );
+          }}
           onTimeUpdate={(event) => editor.notePlayhead(event.currentTarget.currentTime * 1_000_000)}
           onPlay={() => editor.notePlaying(true)}
           onPause={() => editor.notePlaying(false)}

@@ -178,6 +178,7 @@ pub struct AppInfo {
     name: &'static str,
     version: &'static str,
     license: &'static str,
+    preview_base: String,
 }
 
 #[tauri::command]
@@ -186,6 +187,7 @@ pub fn app_info() -> AppInfo {
         name: "PulseCut",
         version: env!("CARGO_PKG_VERSION"),
         license: "GPL-3.0-or-later",
+        preview_base: crate::preview_http::base_url().unwrap_or("").to_string(),
     }
 }
 

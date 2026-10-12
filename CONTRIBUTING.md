@@ -4,7 +4,7 @@ PulseCut is GPL-3.0-or-later. Contributions are accepted under that license.
 
 ## Setup
 
-Install Rust 1.99.0 (the `rust-toolchain.toml` pin), Node 22, pnpm 10, and FFmpeg with libx264 and AAC. On Linux, the Tauri shell also needs the WebKitGTK packages Tauri 2 documents for the host distro.
+Install Rust 1.99.0 (the `rust-toolchain.toml` pin), Node 22, pnpm 10, and FFmpeg with libx264 and AAC. On Linux, the Tauri shell also needs the WebKitGTK packages Tauri 2 documents for the host distro, plus GStreamer plugins that can decode H.264 (`gstreamer1.0-plugins-base`, `gstreamer1.0-plugins-good`, and `gstreamer1.0-libav`).
 
 ```bash
 cargo test --workspace

@@ -1,12 +1,24 @@
 mod commands;
+mod preview_http;
 
 use commands::AppState;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(AppState::default())
+        .setup(|app| {
+            let dir = app
+                .path()
+                .app_cache_dir()
+                .unwrap_or_else(|_| std::env::temp_dir().join("pulsecut"))
+                .join("previews");
+            std::fs::create_dir_all(&dir)?;
+            preview_http::serve(dir)?;
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             commands::engine_report,
             commands::app_info,

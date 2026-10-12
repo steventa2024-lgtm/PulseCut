@@ -34,6 +34,7 @@ export type EditorController = {
   engine: EngineReport | null;
   error: string | null;
   clearError: () => void;
+  reportPlaybackError: (message: string) => void;
   selectedClipId: string | null;
   selectClip: (id: string | null) => void;
   playheadUs: number;
@@ -44,6 +45,7 @@ export type EditorController = {
   setPps: (value: number | ((current: number) => number)) => void;
   render: RenderUi;
   preview: { path: string; revision: number } | null;
+  previewBase: string;
   recovery: RecoveryInfo | null;
   videoRef: RefObject<HTMLVideoElement>;
   exportOpen: boolean;
@@ -101,6 +103,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const [pps, setPps] = useState(80);
   const [render, setRender] = useState<RenderUi>({ active: false, ratio: 0, mode: null, message: "" });
   const [preview, setPreview] = useState<{ path: string; revision: number } | null>(null);
+  const [previewBase, setPreviewBase] = useState("");
   const [recovery, setRecovery] = useState<RecoveryInfo | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportReport, setExportReport] = useState<RenderDone | null>(null);
@@ -133,15 +136,17 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     type UnlistenFn = () => void;
     void (async () => {
       try {
-        const [editor, report, recovered] = await Promise.all([
+        const [editor, report, recovered, info] = await Promise.all([
           api.editorState(),
           api.engineReport(),
           api.recoveryInfo(),
+          api.appInfo(),
         ]);
         if (cancelled) return;
         setState(editor);
         setEngine(report);
         setRecovery(recovered);
+        setPreviewBase(info.previewBase);
         if (!report.ok) setError(report.message);
         unlisten.push(
           await api.onRenderProgress((event) => {
@@ -570,6 +575,11 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     engine,
     error,
     clearError: () => setError(null),
+    reportPlaybackError: (message: string) => {
+      pendingPlay.current = false;
+      setPlaying(false);
+      setError(message);
+    },
     selectedClipId,
     selectClip: setSelectedClipId,
     playheadUs,
@@ -580,6 +590,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     setPps,
     render,
     preview,
+    previewBase,
     recovery,
     videoRef,
     exportOpen,

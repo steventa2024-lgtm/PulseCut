@@ -91,6 +91,8 @@ Difficulty is a relative note for the next change, not a schedule. "Desktop GUI"
 | 7. Preview vs export | Tested above 30 dB on synthetic color. Not tested on camera footage or transitions |
 | 8. Missing and corrupt media | Corrupt probe tested. Missing file tested in the graph unit test |
 | 9. RTX 3070 Ti performance | Not run. This VM has no GPU. See the engine doc for the 4 vCPU numbers |
-| 10. Every visible control, keyboard, resize | Not run in a window. Menus only call real commands. No GUI log exists yet |
+| 10. Every visible control, keyboard, resize | Partial. Space, Home, and the sample timeline were used in the window. Resize and every menu item were not all exercised |
 
-The product is not marked MVP-complete. The Rust path from media to a trimmed MP4 is tested. The desktop window path is implemented and unverified on a display.
+The product is not marked MVP-complete. The Rust path from media to a trimmed MP4 is tested.
+
+A manual window pass on this same VM, after `gstreamer1.0-libav` was installed, did the following. File → the import dialog opened (GTK). Load sample filled the bin with the three fixture files and the four tracks. Space played the proxy: the monitor showed the red frame and the timecode advanced (one capture was `00:00:04:07`, red `(226, 57, 60)`, with Pause shown). At the end of the six-second timeline the monitor was black, which matches the edit. The recovery banner appeared after a restart. The Effects menu only states that effects are not in this build. Export was not clicked through a save dialog in that pass.

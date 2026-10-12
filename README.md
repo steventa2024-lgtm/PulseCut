@@ -28,7 +28,7 @@ Preview is a half-resolution H.264 proxy, not a live GPU compositor. The first p
 - Rust 1.99.0 (`rust-toolchain.toml`)
 - Node.js 22 and pnpm 10
 - FFmpeg and FFprobe on `PATH`, with libx264 and an AAC encoder
-- For the desktop window: Tauri 2's WebView (WebView2 on Windows, WebKitGTK on Linux)
+- For the desktop window: Tauri 2's WebView (WebView2 on Windows, WebKitGTK on Linux). Linux playback also needs a GStreamer H.264 decoder, for example `gstreamer1.0-libav`, plus the base and good plugin packages.
 
 FFmpeg is not bundled. Set `PULSECUT_FFMPEG` and `PULSECUT_FFPROBE` if the binaries are not on `PATH`.
 

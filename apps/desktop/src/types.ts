@@ -83,6 +83,7 @@ export type AppInfo = {
   name: string;
   version: string;
   license: string;
+  previewBase: string;
 };
 
 export type RecoveryInfo = {

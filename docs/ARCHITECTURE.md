@@ -55,7 +55,7 @@ One render runs at a time. Progress is FFmpeg `-progress pipe:1`. Cancel sets an
 
 Commands are `engine_report`, `app_info`, `editor_state`, `dispatch_command`, `probe_media`, `new_project`, `open_project`, `save_project`, `start_render`, `cancel_render`, `thumbnail`, `waveform`, `recovery_info`, `restore_recovery`, `discard_recovery`, and `load_sample`.
 
-The asset protocol may read the app cache, the temp directory, and `/tmp`. Source media is not loaded by the webview. Thumbnails and waveforms come back through commands. Preview playback uses `convertFileSrc` on the cache file. `PULSECUT_CACHE` moves recovery files only. Preview files stay in the app cache so the protocol scope still matches.
+The asset protocol may read the app cache, the temp directory, and `/tmp`. Source media is not loaded by the webview. Thumbnails and waveforms come back through commands. Preview files stay in the app cache. Playback uses a loopback HTTP server on `127.0.0.1` that only serves files named with a 64-character hex hash and a `.mp4` suffix. On Linux, `convertFileSrc` produces an `asset://` URL, and WebKit's media element does not play that scheme. `PULSECUT_CACHE` moves recovery files only.
 
 Capabilities are `core:default` and `dialog:default`. There is no shell plugin. Paths are checked to be existing files before probe or render. FFmpeg is invoked with an argument list, not a shell.
 
